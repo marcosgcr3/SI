@@ -3,6 +3,7 @@ import time
 from operator import itemgetter
 import collections
 
+
 class BaseAgent:
 
     def __init__(self, id, name):
@@ -13,6 +14,7 @@ class BaseAgent:
         self.ultimo_movimiento_exitoso = None  # Último movimiento válido
 
         self.historial_posiciones = collections.deque(maxlen=4)  # Guardamos las últimas 4 posiciones
+
     def Name(self):
         return self.name
 
@@ -27,6 +29,7 @@ class BaseAgent:
         return {1: 3, 2: 4, 3: 1, 4: 2}.get(movimiento, None)
 
     def Update(self, perception):
+        global distancia
         print("Toma de decisiones del agente")
         print(perception)
 
@@ -36,13 +39,13 @@ class BaseAgent:
         action = None
 
         # Bloquear movimientos según obstáculos
-        if perception[0] in [1, 2] and perception[4] < 1:
+        if perception[0] in [1, 2] and perception[4] < 1.0:
             movimientos.discard(1)
-        if perception[1] in [1, 2] and perception[5] < 1:
+        if perception[1] in [1, 2] and perception[5] < 1.0:
             movimientos.discard(2)
-        if perception[2] in [1, 2] and perception[6] < 1:
+        if perception[2] in [1, 2] and perception[6] < 1.0:
             movimientos.discard(3)
-        if perception[3] in [1, 2] and perception[7] < 1:
+        if perception[3] in [1, 2] and perception[7] < 1.0:
             movimientos.discard(4)
 
         # Verificar si puede disparar
@@ -55,20 +58,7 @@ class BaseAgent:
             (2, 6, 3),  # Right
             (3, 7, 4)  # Left
         ]
-        """
-        # Orden de prioridad: SHELL (cercana), PLAYER, COMMAND_CENTER, BRICK
-        for dir_idx, dist_idx, move in directions:
-            obj = perception[dir_idx]
-            dist = perception[dist_idx]
-            if can_fire:
-                if obj == 5 and dist <= 2:  # SHELL cercana
-                    return move, True
-                elif obj == 4:  # PLAYER
-                    return move, True
-                elif obj == 3:  # COMMAND_CENTER
-                    return move, True
-                elif obj == 2 and self._is_brick_blocking(perception, move):  # BRICK útil
-                    return move, True
+
 
 
         """
@@ -80,7 +70,7 @@ class BaseAgent:
             return 3, True
         if perception[3] == 3 or perception[3] == 4 or perception[3] == 5 or perception[3] == 6:
             return 4, True
-        # Si no hay movimientos, quedarse quieto
+        # Si no hay movimientos, quedarse quieto  """
         if not movimientos:
             return None, disparar
 
@@ -102,6 +92,20 @@ class BaseAgent:
             distancia = abs(x_objetivo - nueva_x) + abs(y_objetivo - nueva_y)
             aux.append((distancia, movimiento, (nueva_x, nueva_y)))
 
+        # Orden de prioridad: SHELL (cercana), PLAYER, COMMAND_CENTER, BRICK
+        for dir_idx, dist_idx, move in directions:
+            obj = perception[dir_idx]
+            dist = perception[dist_idx]
+            if can_fire:
+                if obj == 5:  # SHELL cercana
+                    return move, True
+                elif obj == 4:  # PLAYER
+                    return move, True
+                elif obj == 3:  # COMMAND_CENTER
+                    return move, True
+                elif obj == 2 and distancia <6 and self._is_brick_blocking(perception, move):  # BRICK útil
+                    disparar = True
+                    return move, True
 
         aux.sort(key=lambda x: x[0])
         self.historial_posiciones.append((x_actual, y_actual))
@@ -117,7 +121,6 @@ class BaseAgent:
             action = aux[1][1]
         else:
             action = aux[0][1]
-
 
         if len(self.historial_posiciones) == 4:
             p1, p2, p3, p4 = self.historial_posiciones
@@ -172,7 +175,7 @@ class BaseAgent:
         print("Inicio del agente ")
 
     def movimiento_opuesto(self, movimiento):
-        
+
         return {1: 3, 2: 4, 3: 1, 4: 2}.get(movimiento, None)
 
     def Update(self, perception):

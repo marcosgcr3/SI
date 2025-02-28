@@ -13,23 +13,6 @@ import time
 
 
 class LGymClient:
-    """
-    LGymClient class provides an interface to connect, interact, and manage the LGym simulation server.
-
-    The purpose of this class is to handle the communication with the LGym server, facilitating the exchange of
-    commands, perceptions, and metrics. It incorporates methods to initialize the connection, send various commands,
-    process received data, and correctly parse and interpret server responses. The class is designed for managing
-    agents, sending actions, and obtaining simulation states from the LGym server.
-
-    :ivar host: The hostname or IP address of the LGym server.
-    :type host: str
-    :ivar port: The port number used for communication with the LGym server.
-    :type port: int
-    :ivar id: The unique identifier assigned to the client.
-    :type id: int
-    :ivar lgconnectClinet: Instance of LGymConnect used for handling low-level server communication.
-    :type lgconnectClinet: LGymC.LGymConnect
-    """
     def __init__(self, host, port, id):
         self.host = host
         self.port = port
@@ -77,23 +60,6 @@ class LGymClient:
         return False, False, False
     
     def _processMetricsMsg(self, data):
-        """
-        Processes a metrics message by parsing and organizing the provided data into structured
-        attributes. Verifies that the command corresponds to "metrics" and parses the relevant
-        data strings into arrays of specific types. If the processing is successful, returns
-        a dictionary containing parsed attributes; otherwise, returns False.
-
-        :param data: Raw message data to be processed.
-
-        :return: A dictionary containing parsed and organized metrics data with the following
-            keys:
-            - "ids": Array of strings representing identifiers.
-            - "time": Array of floats representing time values.
-            - "checkpoints": Array of integers indicating checkpoints.
-            - "collisions": Array of integers representing collision counts.
-            Returns False if the processing does not succeed.
-        :rtype: dict or bool
-        """
         attributes = self._ParseDataToAttributes(data)
         if self.IsCommand("metrics",attributes) :
             idsStr = attributes["ids"]
