@@ -59,20 +59,15 @@ class BaseAgent:
             (3, 7, 4)  # Left
         ]
 
-
-
-        """
-        if perception[0] == 3 or perception[0] == 4 or perception[0] == 5 or perception[0] == 6:
-            return 1, True
-        if perception[1] == 3 or perception[1] == 4 or perception[1] == 5 or perception[1] == 6:
-            return 2, True
-        if perception[2] == 3 or perception[2] == 4 or perception[2] == 5 or perception[2] == 6:
-            return 3, True
-        if perception[3] == 3 or perception[3] == 4 or perception[3] == 5 or perception[3] == 6:
-            return 4, True
-        # Si no hay movimientos, quedarse quieto  """
         if not movimientos:
             return None, disparar
+
+
+         # Llamar a decidir_disparo
+        accion_disparo, disparar = self.decidir_disparo(perception, directions, can_fire)       
+        if accion_disparo is not None:
+            return accion_disparo, disparar  # Ejecuta el disparo a la amenaza
+
 
         # Calcular mejor movimiento hacia el Command Center
         x_actual, y_actual = perception[12], perception[13]
@@ -83,31 +78,22 @@ class BaseAgent:
             if movimiento == 1:
                 nueva_x, nueva_y = x_actual, y_actual + 1
             elif movimiento == 2:
-                nueva_x, nueva_y = x_actual + 1, y_actual
+                nueva_x, nueva_y = x_actual, y_actual -1
             elif movimiento == 3:
-                nueva_x, nueva_y = x_actual, y_actual - 1
+                nueva_x, nueva_y = x_actual +1, y_actual
             elif movimiento == 4:
                 nueva_x, nueva_y = x_actual - 1, y_actual
 
             distancia = abs(x_objetivo - nueva_x) + abs(y_objetivo - nueva_y)
             aux.append((distancia, movimiento, (nueva_x, nueva_y)))
 
-        # Orden de prioridad: SHELL (cercana), PLAYER, COMMAND_CENTER, BRICK
-        for dir_idx, dist_idx, move in directions:
-            obj = perception[dir_idx]
-            dist = perception[dist_idx]
-            if can_fire:
-                if obj == 5:  # SHELL cercana
-                    return move, True
-                elif obj == 4:  # PLAYER
-                    return move, True
-                elif obj == 3:  # COMMAND_CENTER
-                    return move, True
-                elif obj == 2 and distancia <6 and self._is_brick_blocking(perception, move):  # BRICK útil
-                    disparar = True
-                    return move, True
+
+
+     
 
         aux.sort(key=lambda x: x[0])
+
+    
         self.historial_posiciones.append((x_actual, y_actual))
         # Manejar estancamiento
         if self.ultima_posicion == (x_actual, y_actual):
@@ -135,41 +121,40 @@ class BaseAgent:
         print(f"Movimiento elegido: {action}, Disparar: {disparar}")
         return action, False
 
-    def _is_brick_blocking(self, perception, move):
+    
+    def decidir_disparo(self,perception, directions, can_fire):
+      
+        x_actual, y_actual = perception[12], perception[13]  # Posición del agente
+        x_objetivo, y_objetivo = perception[10], perception[11]  # Posición del Command Center
+        distancia_actual = abs(x_objetivo - x_actual) + abs(y_objetivo - y_actual)
 
-        x_agent, y_agent = perception[12], perception[13]
-        x_target, y_target = perception[10], perception[11]
-        if(move == 1):
-            dir= 4
-        elif(move == 2):
-            dir = 5
-        elif(move == 3):
-            dir = 6
-        elif(move == 4):
-            dir = 7
+        # Lista para almacenar posibles acciones de disparo: (prioridad, movimiento)
+        acciones_disparo = []
 
-        muro = perception[dir]
-        # Determinar dirección del movimiento
+        # Examinar cada dirección
+        for dir_idx, dist_idx, move in directions:
+            obj = perception[dir_idx]
+            dist = perception[dist_idx]
+            if can_fire:
+                if obj == 5:  # SHELL cercana
+                    acciones_disparo.append((1, move))  # Prioridad alta
+                elif obj == 4:  # PLAYER
+                    acciones_disparo.append((2, move))  # Prioridad media
+                elif obj == 3:  # COMMAND_CENTER
+                    acciones_disparo.append((3, move))  # Prioridad baja
+                elif obj == 2 and distancia_actual < 6:  # BRICK útil
+                    acciones_disparo.append((4, move))  # Prioridad más baja
 
-        if move == 1 and muro<0.5:
-            return True  # BRICK arriba en ruta
-        elif move == 3 and muro<0.5:
-            return True  # BRICK abajo en ruta
-        elif move == 2 and muro<0.5:
-            return True  # BRICK derecha en ruta
-        elif move == 4 and muro<0.5:
-            return True  # BRICK izquierda en ruta
-        """
-        if move == 1 and y_agent < y_target:
-            return True  # BRICK arriba en ruta
-        elif move == 3 and y_agent > y_target:
-            return True  # BRICK abajo en ruta
-        elif move == 2 and x_agent < x_target:
-            return True  # BRICK derecha en ruta
-        elif move == 4 and x_agent > x_target:
-            return True  # BRICK izquierda en ruta
-        """
-        return False
+        # Si hay acciones de disparo, elegir la de mayor prioridad
+        if acciones_disparo:
+            acciones_disparo.sort(key=lambda x: x[0])  # Ordenar por prioridad (menor número = mayor prioridad)
+            return acciones_disparo[0][1], True  # Devolver el movimiento de la acción prioritaria
+
+       
+        return None, False
+    
+
+
 
     def End(self, win):
         print("Agente finalizado")
