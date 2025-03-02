@@ -27,6 +27,9 @@ class BaseAgent:
     def movimiento_opuesto(self, movimiento):
 
         return {1: 3, 2: 4, 3: 1, 4: 2}.get(movimiento, None)
+    def miau(self, mov):
+        
+        return {1: 0, 2: 1, 3: 2, 4: 3}.get(mov, None)
 
     def Update(self, perception):
         global distancia
@@ -37,17 +40,32 @@ class BaseAgent:
         movimientos = {1, 2, 3, 4}
         disparar = False
         action = None
+        x_actual, y_actual = perception[12], perception[13]
+        x_objetivo, y_objetivo = perception[10], perception[11]
+        distancia_actual = abs(x_objetivo - x_actual) + abs(y_objetivo - y_actual)
 
         # Bloquear movimientos según obstáculos
-        if perception[0] in [1, 2] and perception[4] < 1.0:
-            movimientos.discard(1)
-        if perception[1] in [1, 2] and perception[5] < 1.0:
-            movimientos.discard(2)
-        if perception[2] in [1, 2] and perception[6] < 1.0:
-            movimientos.discard(3)
-        if perception[3] in [1, 2] and perception[7] < 1.0:
-            movimientos.discard(4)
 
+        if distancia_actual > 6:
+            if perception[0] in [1, 2] and perception[4] < 1.0:
+                movimientos.discard(1)
+            if perception[1] in [1, 2] and perception[5] < 1.0:
+                movimientos.discard(2)
+            if perception[2] in [1, 2] and perception[6] < 1.0:
+                movimientos.discard(3)
+            if perception[3] in [1, 2] and perception[7] < 1.0:
+                movimientos.discard(4)
+        else:
+            if perception[0] in [1]:
+                movimientos.discard(1)
+            if perception[1] in [1]:
+                movimientos.discard(2)
+            if perception[2] in [1]:
+                movimientos.discard(3)
+            if perception[3] in [1]:
+                movimientos.discard(4)
+
+        
         # Verificar si puede disparar
         can_fire = perception[14] == 1
 
@@ -63,10 +81,7 @@ class BaseAgent:
             return None, disparar
 
 
-         # Llamar a decidir_disparo
-        accion_disparo, disparar = self.decidir_disparo(perception, directions, can_fire)       
-        if accion_disparo is not None:
-            return accion_disparo, disparar  # Ejecuta el disparo a la amenaza
+        
 
 
         # Calcular mejor movimiento hacia el Command Center
@@ -92,8 +107,18 @@ class BaseAgent:
      
 
         aux.sort(key=lambda x: x[0])
+        mimi = self.miau(aux[0][1])
+        # Si hay un muro en la dirección del mejor movimiento y esta a menos de 6 del, disparar
+        if perception[self.miau(aux[0][1])] == 2 and distancia_actual < 6:
+            return aux[0][1], True
 
-    
+         # Llamar a decidir_disparo
+        accion_disparo, disparar = self.decidir_disparo(perception, directions, can_fire)       
+        if accion_disparo is not None:
+            return accion_disparo, disparar  # Ejecuta el disparo a la amenaza
+
+
+           
         self.historial_posiciones.append((x_actual, y_actual))
         # Manejar estancamiento
         if self.ultima_posicion == (x_actual, y_actual):
@@ -142,8 +167,8 @@ class BaseAgent:
                     acciones_disparo.append((2, move))  # Prioridad media
                 elif obj == 3:  # COMMAND_CENTER
                     acciones_disparo.append((3, move))  # Prioridad baja
-                elif obj == 2 and distancia_actual < 6:  # BRICK útil
-                    acciones_disparo.append((4, move))  # Prioridad más baja
+                #elif obj == 2 and distancia_actual < 6:  # BRICK útil
+                #    acciones_disparo.append((4, move))  # Prioridad más baja
 
         # Si hay acciones de disparo, elegir la de mayor prioridad
         if acciones_disparo:
