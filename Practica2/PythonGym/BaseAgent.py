@@ -27,12 +27,54 @@ class BaseAgent:
     def movimiento_opuesto(self, movimiento):
 
         return {1: 3, 2: 4, 3: 1, 4: 2}.get(movimiento, None)
-    def miau(self, mov):
+    def objetoPorMov(self, mov):
         
         return {1: 0, 2: 1, 3: 2, 4: 3}.get(mov, None)
+    def mejores_movimiento(self, perception, movimientos):
+        x_actual, y_actual = perception[12], perception[13]
+        x_objetivo, y_objetivo = perception[10], perception[11]
 
+        aux = []
+        for movimiento in movimientos:
+            if movimiento == 1:
+                nueva_x, nueva_y = x_actual, y_actual + 1
+            elif movimiento == 2:
+                nueva_x, nueva_y = x_actual, y_actual -1
+            elif movimiento == 3:
+                nueva_x, nueva_y = x_actual +1, y_actual
+            elif movimiento == 4:
+                nueva_x, nueva_y = x_actual - 1, y_actual
+
+            distancia = abs(x_objetivo - nueva_x) + abs(y_objetivo - nueva_y)
+            aux.append((distancia, movimiento, (nueva_x, nueva_y)))
+        aux.sort(key=lambda x: x[0])
+        return aux
+    def manejar_estancamientos(self, mejores_mov, x_actual, y_actual):
+        self.historial_posiciones.append((x_actual, y_actual))
+        # Manejar estancamiento
+        if self.ultima_posicion == (x_actual, y_actual):
+            self.contador_estancado += 1
+        else:
+            self.contador_estancado = 0
+        self.ultima_posicion = (x_actual, y_actual)
+
+        # Elegir acción evitando peligros
+        if self.contador_estancado >= 3 and len(mejores_mov) > 1:
+            action = mejores_mov[1][1]
+        else:
+            action = mejores_mov[0][1]
+
+        if len(self.historial_posiciones) == 4:
+            p1, p2, p3, p4 = self.historial_posiciones
+            if p1 == p3 and p2 == p4:
+                print(f"Detectado bucle entre {p1} y {p2}, cambiando estrategia.")
+                if len(mejores_mov) > 1:
+                    action = mejores_mov[1][1]  # Elegir el segundo mejor movimiento
+                else:
+                    action = mejores_mov[0][1]  # Si solo hay una opción, tomarla
+        return action
     def Update(self, perception):
-        global distancia
+       
         print("Toma de decisiones del agente")
         print(perception)
 
@@ -80,79 +122,28 @@ class BaseAgent:
         if not movimientos:
             return None, disparar
 
-
-        
-
-
-        # Calcular mejor movimiento hacia el Command Center
-        x_actual, y_actual = perception[12], perception[13]
-        x_objetivo, y_objetivo = perception[10], perception[11]
-
-        aux = []
-        for movimiento in movimientos:
-            if movimiento == 1:
-                nueva_x, nueva_y = x_actual, y_actual + 1
-            elif movimiento == 2:
-                nueva_x, nueva_y = x_actual, y_actual -1
-            elif movimiento == 3:
-                nueva_x, nueva_y = x_actual +1, y_actual
-            elif movimiento == 4:
-                nueva_x, nueva_y = x_actual - 1, y_actual
-
-            distancia = abs(x_objetivo - nueva_x) + abs(y_objetivo - nueva_y)
-            aux.append((distancia, movimiento, (nueva_x, nueva_y)))
-
-
-
+        # Llamar a mejor_movimiento
+        mejores_mov = self.mejores_movimiento(perception, movimientos)
      
 
-        aux.sort(key=lambda x: x[0])
-        mimi = self.miau(aux[0][1])
-        # Si hay un muro en la dirección del mejor movimiento y esta a menos de 6 del, disparar
-        if perception[self.miau(aux[0][1])] == 2 and distancia_actual < 6:
-            return aux[0][1], True
-
          # Llamar a decidir_disparo
-        accion_disparo, disparar = self.decidir_disparo(perception, directions, can_fire)       
+        accion_disparo, disparar = self.decidir_disparo(perception, directions, can_fire, mejores_mov, distancia_actual)       
         if accion_disparo is not None:
             return accion_disparo, disparar  # Ejecuta el disparo a la amenaza
 
 
-           
-        self.historial_posiciones.append((x_actual, y_actual))
-        # Manejar estancamiento
-        if self.ultima_posicion == (x_actual, y_actual):
-            self.contador_estancado += 1
-        else:
-            self.contador_estancado = 0
-        self.ultima_posicion = (x_actual, y_actual)
-
-        # Elegir acción evitando peligros
-        if self.contador_estancado >= 3 and len(aux) > 1:
-            action = aux[1][1]
-        else:
-            action = aux[0][1]
-
-        if len(self.historial_posiciones) == 4:
-            p1, p2, p3, p4 = self.historial_posiciones
-            if p1 == p3 and p2 == p4:
-                print(f"Detectado bucle entre {p1} y {p2}, cambiando estrategia.")
-                if len(aux) > 1:
-                    action = aux[1][1]  # Elegir el segundo mejor movimiento
-                else:
-                    action = aux[0][1]  # Si solo hay una opción, tomarla
-
-        print(aux)
+        action = self.manejar_estancamientos(mejores_mov, x_actual, y_actual)
+       
+        print(mejores_mov)
         print(f"Movimiento elegido: {action}, Disparar: {disparar}")
         return action, False
 
     
-    def decidir_disparo(self,perception, directions, can_fire):
+    def decidir_disparo(self,perception, directions, can_fire, mejores_mov, distancia_actual):
       
-        x_actual, y_actual = perception[12], perception[13]  # Posición del agente
-        x_objetivo, y_objetivo = perception[10], perception[11]  # Posición del Command Center
-        distancia_actual = abs(x_objetivo - x_actual) + abs(y_objetivo - y_actual)
-
+       
+        if perception[self.objetoPorMov(mejores_mov[0][1])] == 2 and distancia_actual < 6:
+            return mejores_mov[0][1], True
         # Lista para almacenar posibles acciones de disparo: (prioridad, movimiento)
         acciones_disparo = []
 
