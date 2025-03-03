@@ -1,6 +1,4 @@
-import random
-import time
-from operator import itemgetter
+
 import collections
 
 UP = 1
