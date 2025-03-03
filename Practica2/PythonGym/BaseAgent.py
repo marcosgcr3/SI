@@ -3,6 +3,19 @@ import time
 from operator import itemgetter
 import collections
 
+UP = 1
+DOWN = 2
+RIGHT = 3
+LEFT = 4
+
+EMPTY = 0
+OBSTACLE = 1
+WALL = 2
+COMMAND_CENTER = 3
+PLAYER = 4
+SHELL = 5
+OTHER = 6
+
 
 class BaseAgent:
 
@@ -25,24 +38,23 @@ class BaseAgent:
         print("Inicio del agente ")
 
     def movimiento_opuesto(self, movimiento):
+        return {UP: RIGHT, DOWN: LEFT, RIGHT: UP, LEFT: DOWN}.get(movimiento, None)
 
-        return {1: 3, 2: 4, 3: 1, 4: 2}.get(movimiento, None)
     def objetoPorMov(self, mov):
-        
-        return {1: 0, 2: 1, 3: 2, 4: 3}.get(mov, None)
+        return {UP: 0, DOWN: 1, RIGHT: 2, LEFT: 3}.get(mov, None)
     def mejores_movimiento(self, perception, movimientos):
         x_actual, y_actual = perception[12], perception[13]
         x_objetivo, y_objetivo = perception[10], perception[11]
 
         aux = []
         for movimiento in movimientos:
-            if movimiento == 1:
+            if movimiento == UP:
                 nueva_x, nueva_y = x_actual, y_actual + 1
-            elif movimiento == 2:
-                nueva_x, nueva_y = x_actual, y_actual -1
-            elif movimiento == 3:
-                nueva_x, nueva_y = x_actual +1, y_actual
-            elif movimiento == 4:
+            elif movimiento == DOWN:
+                nueva_x, nueva_y = x_actual, y_actual - 1
+            elif movimiento == RIGHT:
+                nueva_x, nueva_y = x_actual + 1, y_actual
+            elif movimiento == LEFT:
                 nueva_x, nueva_y = x_actual - 1, y_actual
 
             distancia = abs(x_objetivo - nueva_x) + abs(y_objetivo - nueva_y)
@@ -89,34 +101,33 @@ class BaseAgent:
         # Bloquear movimientos según obstáculos
 
         if distancia_actual > 6:
-            if perception[0] in [1, 2] and perception[4] < 1.0:
-                movimientos.discard(1)
-            if perception[1] in [1, 2] and perception[5] < 1.0:
-                movimientos.discard(2)
-            if perception[2] in [1, 2] and perception[6] < 1.0:
-                movimientos.discard(3)
-            if perception[3] in [1, 2] and perception[7] < 1.0:
-                movimientos.discard(4)
+            if perception[0] in [OBSTACLE, WALL] and perception[4] < 1.0:
+                movimientos.discard(UP)
+            if perception[1] in [OBSTACLE, WALL] and perception[5] < 1.0:
+                movimientos.discard(DOWN)
+            if perception[2] in [OBSTACLE, WALL] and perception[6] < 1.0:
+                movimientos.discard(RIGHT)
+            if perception[3] in [OBSTACLE, WALL] and perception[7] < 1.0:
+                movimientos.discard(LEFT)
         else:
-            if perception[0] in [1]:
-                movimientos.discard(1)
-            if perception[1] in [1]:
-                movimientos.discard(2)
-            if perception[2] in [1]:
-                movimientos.discard(3)
-            if perception[3] in [1]:
-                movimientos.discard(4)
+            if perception[0] == OBSTACLE:
+                movimientos.discard(UP)
+            if perception[1] == OBSTACLE:
+                movimientos.discard(DOWN)
+            if perception[2] == OBSTACLE:
+                movimientos.discard(RIGHT)
+            if perception[3] == OBSTACLE:
+                movimientos.discard(LEFT)
 
         
         # Verificar si puede disparar
         can_fire = perception[14] == 1
 
-        # Priorizar disparar a amenazas
         directions = [
-            (0, 4, 1),  # Up
-            (1, 5, 2),  # Down
-            (2, 6, 3),  # Right
-            (3, 7, 4)  # Left
+            (0, 4, UP),    # Up
+            (1, 5, DOWN),  # Down
+            (2, 6, RIGHT), # Right
+            (3, 7, LEFT)   # Left
         ]
 
         if not movimientos:
@@ -142,7 +153,7 @@ class BaseAgent:
     def decidir_disparo(self,perception, directions, can_fire, mejores_mov, distancia_actual):
       
        
-        if perception[self.objetoPorMov(mejores_mov[0][1])] == 2 and distancia_actual < 6:
+        if perception[self.objetoPorMov(mejores_mov[0][1])] == WALL and distancia_actual < 6:
             return mejores_mov[0][1], True
         # Lista para almacenar posibles acciones de disparo: (prioridad, movimiento)
         acciones_disparo = []
@@ -152,12 +163,14 @@ class BaseAgent:
             obj = perception[dir_idx]
             dist = perception[dist_idx]
             if can_fire:
-                if obj == 5:  # SHELL cercana
+                if obj == SHELL:  # SHELL cercana
                     acciones_disparo.append((1, move))  # Prioridad alta
-                elif obj == 4:  # PLAYER
+                elif obj == PLAYER:  # PLAYER
                     acciones_disparo.append((2, move))  # Prioridad media
-                elif obj == 3:  # COMMAND_CENTER
+                elif obj == COMMAND_CENTER:  # COMMAND_CENTER
                     acciones_disparo.append((3, move))  # Prioridad baja
+                elif obj == OTHER:  # COMMAND_CENTER
+                    acciones_disparo.append((4, move))  # Prioridad baja
                 #elif obj == 2 and distancia_actual < 6:  # BRICK útil
                 #    acciones_disparo.append((4, move))  # Prioridad más baja
 
