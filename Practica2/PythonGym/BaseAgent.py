@@ -38,6 +38,7 @@ class BaseAgent:
         self.estado = EXPLORAR
         self.ESCAPAR = None
         self.historial_posiciones = collections.deque(maxlen=4)  # Guardamos las últimas 4 posiciones
+        self.atascado = False
 
     def Name(self):
         return self.name
@@ -76,7 +77,7 @@ class BaseAgent:
         return aux
     def cambio_estado(self, perception, distance):
         for i in range(4):
-            if perception[i] in [SHELL, PLAYER, COMMAND_CENTER, OTHER] or (perception[i] == WALL and distance<6):
+            if perception[i] in [SHELL, PLAYER, COMMAND_CENTER, OTHER] or self.atascado or (perception[i] == WALL and distance <6 ):
                 if perception[14]==1:
                     self.estado = ATAQUE
                     break
@@ -114,16 +115,13 @@ class BaseAgent:
                     action = mejores_mov[0][1]  # Si solo hay una opción, tomarla
         return action
     def bloquear_mov(self, distancia_actual , movimientos, perception):
-        if distancia_actual > 6:
-            if perception[0] in [OBSTACLE, WALL] and perception[4] < 1.0:
-                movimientos.discard(UP)
-            if perception[1] in [OBSTACLE, WALL] and perception[5] < 1.0:
-                movimientos.discard(DOWN)
-            if perception[2] in [OBSTACLE, WALL] and perception[6] < 1.0:
-                movimientos.discard(RIGHT)
-            if perception[3] in [OBSTACLE, WALL] and perception[7] < 1.0:
-                movimientos.discard(LEFT)
-        else:
+        j=0
+        for i in range(4):
+            if perception[i] in [OBSTACLE, WALL] and perception[i+4] < 1:
+                j=j+1
+
+        if j >= 3:
+            self.atascado = True
             if perception[0] == OBSTACLE:
                 movimientos.discard(UP)
             if perception[1] == OBSTACLE:
@@ -132,10 +130,35 @@ class BaseAgent:
                 movimientos.discard(RIGHT)
             if perception[3] == OBSTACLE:
                 movimientos.discard(LEFT)
+
+
+
+        else:
+
+            self.atascado = False
+
+
+            if distancia_actual > 6:
+                if perception[0] in [OBSTACLE, WALL] and perception[4] < 1.0:
+                    movimientos.discard(UP)
+                if perception[1] in [OBSTACLE, WALL] and perception[5] < 1.0:
+                    movimientos.discard(DOWN)
+                if perception[2] in [OBSTACLE, WALL] and perception[6] < 1.0:
+                    movimientos.discard(RIGHT)
+                if perception[3] in [OBSTACLE, WALL] and perception[7] < 1.0:
+                    movimientos.discard(LEFT)
+            else:
+                if perception[0] == OBSTACLE:
+                    movimientos.discard(UP)
+                if perception[1] == OBSTACLE:
+                    movimientos.discard(DOWN)
+                if perception[2] == OBSTACLE:
+                    movimientos.discard(RIGHT)
+                if perception[3] == OBSTACLE:
+                    movimientos.discard(LEFT)
     def decidir_disparo(self, perception, mejores_mov, distancia_actual):
 
-        if perception[self.objetoPorMov(mejores_mov[0][1])] == WALL and distancia_actual < 6:
-            return mejores_mov[0][1], True
+
         # Lista para almacenar posibles acciones de disparo: (prioridad, movimiento)
         acciones_disparo = []
 
@@ -151,22 +174,23 @@ class BaseAgent:
                 acciones_disparo.append((3, move))  # Prioridad baja
             elif obj == OTHER:  # COMMAND_CENTER
                 acciones_disparo.append((4, move))  # Prioridad baja
-            # elif obj == 2 and distancia_actual < 6:  # BRICK útil
-            #    acciones_disparo.append((4, move))  # Prioridad más baja
+            elif obj == 2 and perception[dist_idx] <6 and move == mejores_mov[0][1]:  # BRICK útil
+                acciones_disparo.append((5, move))  # Prioridad más baja
 
         # Si hay acciones de disparo, elegir la de mayor prioridad
         if acciones_disparo:
             acciones_disparo.sort(key=lambda x: x[0])  # Ordenar por prioridad (menor número = mayor prioridad)
             return acciones_disparo[0][1], True  # Devolver el movimiento de la acción prioritaria
 
-        return None, False
+
+        return mejores_mov[0][1], False
 
     def huir(self, perception):
         # Si no hay dirección de peligro definida, no hay nada de qué huir
         if self.ESCAPAR is None:
             return None
 
-        #
+
         idx_huida = self.movimiento_opuesto(self.ESCAPAR)
 
         # Si la dirección del peligro es inválida, no huir
@@ -239,6 +263,7 @@ class BaseAgent:
             action = self.huir(perception)
 
         print(mejores_mov)
+        print(f"Estado: {self.estado}")
         print(f"Movimiento elegido: {action}, Disparar: {disparar}")
         return action, False
 
