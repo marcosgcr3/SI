@@ -58,7 +58,8 @@ class BCProblem(Problem):
     #parámetro
     @staticmethod
     def CanMove(value):
-        return value != AgentConsts.UNBREAKABLE and value != AgentConsts.SEMI_UNBREKABLE and value != AgentConsts.SEMI_UNBREKABLE
+        return value == AgentConsts.NOTHING or value == AgentConsts.BRICK or value == AgentConsts.COMMAND_CENTER
+        #return value != AgentConsts.UNBREAKABLE and value != AgentConsts.SEMI_UNBREKABLE and value != AgentConsts.SEMI_UNBREKABLE
     
     #convierte coordenadas mapa en formato vector a matriz
     @staticmethod

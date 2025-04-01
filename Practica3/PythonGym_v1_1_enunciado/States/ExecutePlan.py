@@ -71,6 +71,10 @@ class ExecutePlan(State):
         else:
             move = self.GetDirection(nextNode,x,y)
             shot = nextNode.value == AgentConsts.BRICK or nextNode.value == AgentConsts.COMMAND_CENTER
+
+        if goal.value == AgentConsts.COMMAND_CENTER and nextNode.value == AgentConsts.BRICK:
+            shot = True
+
         self.lastMove = move
         return move, shot
 
