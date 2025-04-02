@@ -52,8 +52,18 @@ class GoalMonitor:
 
 
 
-        # 2. Si ha pasado más de medio segundo desde la última planificación(por si se atasca)
-        if perception[AgentConsts.TIME] - self.lastTime > 0.5:
+        #Si nuestro objetivo actual es el jugador pero estamos mas cerca de command center, vamos a por el.
+        goal = agent.problem.GetGoal()
+        if goal.value == AgentConsts.PLAYER and playerDist > comandDist or perception[AgentConsts.TIME] - self.lastTime > 4:
+            self.lastTime = perception[AgentConsts.TIME]
+
+            return True
+
+
+
+
+        # 2. Si ha pasado más de 5 segundos desde la última planificación(por si se atasca)
+        if perception[AgentConsts.TIME] - self.lastTime > 5:
             self.lastTime = perception[AgentConsts.TIME]
             return True
 
