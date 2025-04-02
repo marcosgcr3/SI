@@ -45,7 +45,7 @@ class AStar:
                 # Si ya está en cerrados, ignorar
                 is_in_closed = False
                 for closed_node in self.precessed:
-                    if sucesor.IsEqual(closed_node):
+                    if sucesor == closed_node:
                         is_in_closed = True
                         break
                 if is_in_closed:
@@ -82,7 +82,7 @@ class AStar:
         while found == None and i < len(self.open):
             node = self.open[i]
             i += 1
-            if node.IsEqual(sucesor):
+            if node == sucesor:
                 found = node
         return found
 

@@ -9,9 +9,16 @@ class BCNode(Node):
         self.value = value
         self.x = int(x)
         self.y = int(y)
-    
-    def IsEqual(self,node):
-        # Dos nodos son iguales cuando sus coordenadas x e y son iguales
+
+    def __repr__(self):
+        return f"BCNode(x={self.x}, y={self.y})"
+
+    def __eq__(self,node):
+        # Dos nodos son iguales cuando sus coordenadas x e y son iguales]
+        if node == None:
+            return False
         return self.x == node.x and self.y == node.y
 
-    
+
+    def __hash__(self):
+        return hash((self.x, self.y))
