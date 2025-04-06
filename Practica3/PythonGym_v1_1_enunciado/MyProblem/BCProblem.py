@@ -109,7 +109,9 @@ class BCProblem(Problem):
         elif value == AgentConsts.BRICK:
             return 5  # Costo para romper un ladrillo
         elif value == AgentConsts.SEMI_BREKABLE:
-            return 3  # Costo para romper un semi-rompible
+            return 7  # Costo para romper un semi-rompible
+        elif value == AgentConsts.SEMI_UNBREKABLE:
+            return 8  # Costo para romper un semi-inrrompible
         elif value == AgentConsts.COMMAND_CENTER:
             return 10  # Costo para el centro de comando (objetivo final)
         elif value == AgentConsts.LIFE:

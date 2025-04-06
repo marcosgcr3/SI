@@ -52,7 +52,7 @@ class AStar:
                     continue
 
                 # Calcular nuevo G(n)
-                new_g = current.G() + self.problem.GetGCost(sucesor)
+                new_g = current.G() + self.problem. GetGCost(sucesor)
 
                 # Buscar si ya está en abiertos
                 node_in_open = self.GetSucesorInOpen(sucesor)

@@ -1,6 +1,6 @@
 import random
 
-from click import command
+
 
 from States.AgentConsts import AgentConsts
 
@@ -105,6 +105,6 @@ class GoalMonitor:
 
         # 3. Por defecto, ir al centro de comando
         return self.goals[self.GOAL_COMMAND_CENTRER]
-    
+
     def UpdateGoals(self,goal, goalId):
         self.goals[goalId] = goal
