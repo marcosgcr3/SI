@@ -14,11 +14,16 @@ class Attack(State):
 
     def Update(self, perception, map, agent):
         # Verificar si necesitamos huir (no tenemos munición)
-        if self.ShouldFlee(perception):
+        if self.deberiaEscapar(perception):
             return 0, False  # No nos movemos, pero no disparamos y cambiamos de estado
 
         self.directionToLook = agent.directionToLook
-        return 0, True
+        #Solo disparamos si vemos al enemigo
+        if perception[self.directionToLook] == AgentConsts.PLAYER or perception[
+            self.directionToLook] == AgentConsts.COMMAND_CENTER:
+            return 0, True
+
+        return 0, False
 
     def Transit(self, perception, map):
         # Si no podemos disparar y hay una amenaza, huir
@@ -39,23 +44,5 @@ class Attack(State):
                 if perception[i] == AgentConsts.SHELL:
                     return True
 
-            # Verificar si hay jugador cerca
-            for i in range(4):  # UP, DOWN, RIGHT, LEFT
-                if perception[i] == AgentConsts.PLAYER:
-                    return True
-
-            # Verificar si el jugador está visible y cerca
-            playerX = perception[AgentConsts.PLAYER_X]
-            playerY = perception[AgentConsts.PLAYER_Y]
-
-            if playerX >= 0 and playerY >= 0:
-                # Calcular distancia al jugador
-                agentX = perception[AgentConsts.AGENT_X]
-                agentY = perception[AgentConsts.AGENT_Y]
-                playerDist = abs(playerX - agentX) + abs(playerY - agentY)
-
-                # Si el jugador está cerca y no podemos disparar, debemos huir
-                if playerDist < 8:
-                    return True
 
         return False

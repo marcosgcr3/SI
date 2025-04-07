@@ -62,8 +62,8 @@ class GoalMonitor:
 
 
 
-        # 2. Si ha pasado más de 5 segundos desde la última planificación(por si se atasca)
-        if perception[AgentConsts.TIME] - self.lastTime > 5:
+        # 2. Si ha pasado más de 10 segundos desde la última planificación(por si se atasca)
+        if perception[AgentConsts.TIME] - self.lastTime > 3:
             self.lastTime = perception[AgentConsts.TIME]
             return True
 

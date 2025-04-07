@@ -58,7 +58,17 @@ class ExecutePlan(State):
             nextNode = plan[0]
         goal = agent.problem.GetGoal()
 
-        if len(plan) <= 4 and (goal.value == AgentConsts.PLAYER):
+        player_visible = False
+        for i in range(4):  # Verificar si el jugador está en una dirección adyacente
+            if perception[i] == AgentConsts.PLAYER:
+                player_visible = True
+                agent.directionToLook = i
+                break
+
+
+
+
+        if len(plan) <= 4 and (goal.value == AgentConsts.PLAYER) and player_visible:
             self.transition = "Attack"
             move = self.GetDirection(nextNode, x, y)
             agent.directionToLook = move - 1  ## la percepción es igual que el movimiento pero restando 1
@@ -93,24 +103,24 @@ class ExecutePlan(State):
             return True
 
         # Verificar si hay un jugador cerca y no podemos disparar
-        playerX = perception[AgentConsts.PLAYER_X]
-        playerY = perception[AgentConsts.PLAYER_Y]
-        agentX = perception[AgentConsts.AGENT_X]
-        agentY = perception[AgentConsts.AGENT_Y]
+        #playerX = perception[AgentConsts.PLAYER_X]
+        #playerY = perception[AgentConsts.PLAYER_Y]
+        #agentX = perception[AgentConsts.AGENT_X]
+        #agentY = perception[AgentConsts.AGENT_Y]
 
-        if playerX >= 0 and playerY >= 0 and perception[AgentConsts.CAN_FIRE] == 0:
+        #if playerX >= 0 and playerY >= 0 and perception[AgentConsts.CAN_FIRE] == 0:
             # Calcular distancia al jugador
-            playerDist = abs(playerX - agentX) + abs(playerY - agentY)
+         #   playerDist = abs(playerX - agentX) + abs(playerY - agentY)
 
             # Si el jugador está cerca y no podemos disparar, huir
-            if playerDist < 8:
-                return True
+         #   if playerDist < 8:
+         #       return True
 
             # Ver si el jugador está en una de las direcciones adyacentes
-            for i in range(4):  # UP, DOWN, RIGHT, LEFT
-                if perception[i] == AgentConsts.PLAYER:
-                    return True
-
+          #  for i in range(4):  # UP, DOWN, RIGHT, LEFT
+         #       if perception[i] == AgentConsts.PLAYER:
+  #                  return True
+#
         return False
 
     def Transit(self, perception, map):

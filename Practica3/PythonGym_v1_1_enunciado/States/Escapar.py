@@ -53,26 +53,12 @@ class Escapar(State):
     def DetectDangerDirection(self, perception):
         # Verificar las 4 direcciones principales para la amenaza (jugador o proyectil)
         for i in range(4):  # UP, DOWN, RIGHT, LEFT
-            if perception[i] == AgentConsts.SHELL or perception[i] == AgentConsts.PLAYER:
+            if perception[i] == AgentConsts.SHELL: #or perception[i] == AgentConsts.PLAYER
                 return i
 
-        # Si no hay amenaza inmediata pero podemos ver al jugador, considerar su dirección
-        playerX = perception[AgentConsts.PLAYER_X]
-        playerY = perception[AgentConsts.PLAYER_Y]
-        agentX = perception[AgentConsts.AGENT_X]
-        agentY = perception[AgentConsts.AGENT_Y]
 
-        if playerX >= 0 and playerY >= 0:  # Si el jugador está visible
-            # Calcular la dirección aproximada del jugador
-            dx = playerX - agentX
-            dy = playerY - agentY
 
-            if abs(dx) > abs(dy):
-                return AgentConsts.NEIGHBORHOOD_RIGHT if dx > 0 else AgentConsts.NEIGHBORHOOD_LEFT
-            else:
-                return AgentConsts.NEIGHBORHOOD_DOWN if dy > 0 else AgentConsts.NEIGHBORHOOD_UP
-
-        return -1  # No se detectó peligro
+        return -1
 
     def ChooseSafeDirection(self, perception, dangerDirection):
         # Si no hay peligro inmediato, mantener la dirección actual
@@ -111,22 +97,9 @@ class Escapar(State):
     def IsInDanger(self, perception):
         # Verificar si hay proyectiles o jugador cerca
         for i in range(4):  # UP, DOWN, RIGHT, LEFT
-            if perception[i] == AgentConsts.SHELL or perception[i] == AgentConsts.PLAYER:
+            if perception[i] == AgentConsts.SHELL: #or perception[i] == AgentConsts.PLAYER
                 return True
 
-        # Verificar si el jugador está visible y no tenemos munición
-        playerX = perception[AgentConsts.PLAYER_X]
-        playerY = perception[AgentConsts.PLAYER_Y]
-        canFire = perception[AgentConsts.CAN_FIRE]
 
-        if playerX >= 0 and playerY >= 0 and canFire == 0:
-            # Calcular distancia al jugador
-            agentX = perception[AgentConsts.AGENT_X]
-            agentY = perception[AgentConsts.AGENT_Y]
-            playerDist = abs(playerX - agentX) + abs(playerY - agentY)
-
-            # Si el jugador está cerca y no podemos disparar, estamos en peligro
-            if playerDist < 8:
-                return True
 
         return False
