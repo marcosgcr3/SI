@@ -9,8 +9,7 @@ class GoalMonitor:
     GOAL_COMMAND_CENTRER = 0
     GOAL_LIFE = 1
     GOAL_PLAYER = 2
-    GOAL_SHELL = 3
-
+    
     def __init__(self, problem, goals):
         self.goals = goals
         self.problem = problem
